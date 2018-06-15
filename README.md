@@ -1,5 +1,5 @@
 ## Resume
-A set of functions designed to support the didactics and the application of regression methods that do not follow a statistical distribution.
+A set of functions designed to support the didactics and the application of regression methods in datasets that do not follow a statistical distribution.
 
 ## Introduction
 
