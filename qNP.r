@@ -65,3 +65,25 @@ rreg <- function (dados) {
   colnames(out$modeloEscolhido) <- c("Intercepto","Inclinação")
   return(out)
 }
+
+btlad <- function(lad_inicial, repeticoes){
+  aux <- vector(mode = "list", length = 3); aux[[1]] <- double(repeticoes)
+  y <- mean(lad_inicial$original.y)
+  for(i in seq(1, repeticoes)){
+    aux[[2]] <- sample(lad_inicial$residuals, length(lad_inicial$residuals), replace = T)
+    aux[[3]] <- y + aux[[2]]; cat("Calculando..", i,"/",repeticoes, "\n")
+    aux[[1]][i] <- as.numeric(lad(data.frame(aux[[3]], lad_inicial$original.x))$modeloEscolhido[2])
+  }
+  return(list('repeticoes' = repeticoes, 'qt' = c(quantile(aux[[1]], .025), quantile(aux[[1]], 0.975)), 'betas' = aux[[1]]))
+}
+
+btrreg <- function(rreg_inicial, repeticoes){
+  aux <- vector(mode = "list", length = 3); aux[[1]] <- double(repeticoes)
+  y <- mean(rreg_inicial$original.y)
+  for(i in seq(1, repeticoes)){
+    aux[[2]] <- sample(rreg_inicial$residuals, length(rreg_inicial$residuals), replace = T)
+    aux[[3]] <- y + aux[[2]]; cat("Calculando..", i,"/",repeticoes, "\n")
+    aux[[1]][i] <- as.numeric(rreg(data.frame(aux[[3]], rreg_inicial$original.x))$modeloEscolhido[2])
+  }
+  return(list('Repeticoes' = repeticoes, 'qt' = c(quantile(aux[[1]], .025), quantile(aux[[1]], 0.975)), 'betas' = aux[[1]]))
+}
