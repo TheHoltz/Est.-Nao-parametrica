@@ -1,146 +1,67 @@
-dados <- read.csv2("https://pastebin.com/raw/6GHshnm0", header=T, sep = "\t")
-#esses dados são de exemplo
+#dados <- read.csv2("https://pastebin.com/raw/6GHshnm0", header=T, sep = "\t")
 
 lad <- function (dados) {
-  combinations <- combn(c(1:nrow(dados)),2)
-  #Declarando as variáveis
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
-  int <- double(ncol(combinations))
-  inc <- double(ncol(combinations))
-  #Realizando uma regressao para cada combinação
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
+  combinations <- combn(c(1:nrow(dados)),2); aux <- vector(mode = "list", length = 6)
+  aux[[1]] <- double(ncol(combinations)); aux[[2]] <- double(ncol(combinations))
   for(i in seq(1, ncol(combinations))){
-    y <- matrix(nrow=2, ncol=1)
+    y <- matrix(nrow=2, ncol=1); x <- matrix(nrow=2, ncol=2)
     y[1,1] <- as.numeric(dados[combinations[,i][1],][1])
     y[2,1] <- as.numeric(dados[combinations[,i][2],][1])
-    x <- matrix(nrow=2, ncol=2)
     x[c(1,2),1] <-c(1,1)
     x[1,2] <- as.numeric(dados[combinations[,i][1],][2])
     x[2,2] <- as.numeric(dados[combinations[,i][2],][2])
     if(x[1,2] == x[2,2]){
-      int <- int[-i]
-      inc <- inc[-i]} else {
-        int[i] <- solve(x,y, tol = 1e-17)[1]
-        inc[i] <- solve(x,y, tol = 1e-17)[2] }
-  }
-  residuos <- numeric(length(inc))
-  for(i in 1:length(inc)){
-    residuos[i] <- sum(abs(dados[,1] - (int[i]+inc[i]*dados[,2])))
-  }
-  #Declarando variáveis
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
-  out <- list()
-  auxiliar <- vector(mode = "list", length = 1)
-  auxiliar[[1]] <- matrix(ncol = 3, nrow=length(int))
-  auxiliar[[1]][,1] <- int
-  auxiliar[[1]][,2] <- inc
-  auxiliar[[1]][,3] <- residuos
-  #Salvando beta0 e beta1
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
-  beta0 <- numeric(1)
-  beta1 <- numeric(1)
-  beta0[1] <- as.numeric(auxiliar[[1]][which.min(auxiliar[[1]][,3]),][1])
-  beta1[1] <- as.numeric(auxiliar[[1]][which.min(auxiliar[[1]][,3]),][2])
-  #Estimando residuos e estimações
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
-  out$salve <- cat("Universidade Federal de Minas Gerais \nRegressão não paramétrica: LAD\n\n")
-  out$original.x <- dados[,2]
-  out$original.y <- dados[,1]
-  out$fitted.values <- beta0 + beta1 * dados[,2]
-  out$residuals <- (beta0 + beta1 * dados[,2]) - dados[,1] 
-  out$modeloEscolhido <- cbind(auxiliar[[1]][which.min(auxiliar[[1]][,3]),][1],auxiliar[[1]][which.min(auxiliar[[1]][,3]),][2],auxiliar[[1]][which.min(auxiliar[[1]][,3]),][3])
+      aux[[1]] <- aux[[1]][-i]
+      aux[[2]] <- aux[[2]][-i]} else {
+        aux[[1]][i] <- solve(x,y, tol = 1e-17)[1]
+        aux[[2]][i] <- solve(x,y, tol = 1e-17)[2]}}
+  aux[[3]] <- numeric(length(aux[[2]]))
+  for(i in 1:length(aux[[2]])){aux[[3]][i] <- sum(abs(dados[,1] - (aux[[1]][i]+aux[[2]][i]*dados[,2])))}
+  aux[[4]] <- matrix(ncol = 3, nrow=length(aux[[1]]))
+  aux[[4]][,1] <- aux[[1]]; aux[[4]][,2] <- aux[[2]]; aux[[4]][,3] <- aux[[3]]
+  aux[[5]] <- numeric(1); aux[[6]] <- numeric(1)
+  aux[[5]][1] <- as.numeric(aux[[4]][which.min(aux[[4]][,3]),][1])
+  aux[[6]][1] <- as.numeric(aux[[4]][which.min(aux[[4]][,3]),][2])
+  out <- list(); out$salve <- cat("Universidade Federal de Minas Gerais \nRegressão não paramétrica: LAD\n\n")
+  out$original.x <- dados[,2]; out$original.y <- dados[,1]
+  out$fitted.values <- aux[[5]] + aux[[6]] * dados[,2]
+  out$residuals <- (aux[[5]] + aux[[6]] * dados[,2]) - dados[,1] 
+  out$modeloEscolhido <- cbind(aux[[4]][which.min(aux[[4]][,3]),][1],aux[[4]][which.min(aux[[4]][,3]),][2],aux[[4]][which.min(aux[[4]][,3]),][3])
   colnames(out$modeloEscolhido) <- c("Intercepto","Inclinação","Soma_residuos")
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
   return(out)
 }
 
 rreg <- function (dados) {
-  library(dplyr)
-  combinations <- combn(c(1:nrow(dados)),2)
-  #Declarando as variáveis
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
-  int <- numeric(ncol(combinations))
-  inc <- numeric(ncol(combinations))
-  pesos <- numeric(ncol(combinations))
-  #Realizando uma regressao para cada combinação
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
+  library(dplyr) #### requires this library
+  combinations <- combn(c(1:nrow(dados)),2); aux <- vector(mode = "list", length = 9)
+  aux[[1]] <- numeric(ncol(combinations)); aux[[2]] <- numeric(ncol(combinations))
+  aux[[3]] <- numeric(ncol(combinations))
   for(i in seq(1, ncol(combinations))){
-    y <- matrix(nrow=2, ncol=1)
-    y[1,1] <- as.numeric(dados[combinations[,i][1],][1])
-    y[2,1] <- as.numeric(dados[combinations[,i][2],][1])
-    x <- matrix(nrow=2, ncol=2)
-    x[c(1,2),1] <-c(1,1)
-    x[1,2] <- as.numeric(dados[combinations[,i][1],][2])
-    x[2,2] <- as.numeric(dados[combinations[,i][2],][2])
-    if(x[1,2] == x[2,2]){
-      int <- int[-i]
-      inc <- inc[-i]
-      pesos <- pesos[-i]} else {
-        int[i] <- solve(x,y, tol = 1e-17)[1]
-        inc[i] <- solve(x,y, tol = 1e-17)[2] 
-        pesos[i] <-  as.numeric(abs(x[1,2] - x[2,2]))
-      }
-  }
-  #Declarando variáveis
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
-  out <- list()
-  auxiliar <- list()
-  auxiliar$Tabela <- data.frame(int, inc, pesos)
-  auxiliar$Tabela <- auxiliar$Tabela %>% arrange(inc) 
-  auxiliar$Tabela <- cbind(auxiliar$Tabela, cumsum(auxiliar$Tabela[,3]/sum(pesos)))
-  auxiliar$Tabela <- auxiliar$Tabela %>% filter((inc != 00))
-  colnames(auxiliar$Tabela) <- c("int","inc","Distancia","pesoacum")
-  #Salvando beta0 e beta1
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
-  beta1 <- filter(auxiliar$Tabela, pesoacum>0.5)[1,2]
-  betas0 <- double(nrow(dados))
-  for(i in seq(1, nrow(dados))){
-    betas0[i] <- as.numeric(dados[i,][1] - beta1 * dados[i,][2])
-  }
-  beta0 <- median(betas0)
-  #Estimando residuos e estimações
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
+    aux[[5]] <- matrix(nrow=2, ncol=1); aux[[6]] <- matrix(nrow=2, ncol=2)
+    aux[[5]][1,1] <- as.numeric(dados[combinations[,i][1],][1])
+    aux[[5]][2,1] <- as.numeric(dados[combinations[,i][2],][1])
+    aux[[6]][c(1,2),1] <-c(1,1)
+    aux[[6]][1,2] <- as.numeric(dados[combinations[,i][1],][2])
+    aux[[6]][2,2] <- as.numeric(dados[combinations[,i][2],][2])
+    if(aux[[6]][1,2] == aux[[6]][2,2]){
+      aux[[1]] <- aux[[1]][-i]
+      aux[[2]] <- aux[[2]][-i]
+      aux[[3]] <- aux[[3]][-i]} else {
+        aux[[1]][i] <- solve(aux[[6]],aux[[5]], tol = 1e-17)[1]
+        aux[[2]][i] <- solve(aux[[6]],aux[[5]], tol = 1e-17)[2] 
+        aux[[3]][i] <-  as.numeric(abs(aux[[6]][1,2] - aux[[6]][2,2]))}}
+  out <- list(); aux[[7]] <- data.frame(aux[[1]], aux[[2]], aux[[3]]); aux[[7]] <- aux[[7]] %>% arrange(aux[[2]]) 
+  aux[[7]] <- cbind(aux[[7]], cumsum(aux[[7]][,3]/sum(aux[[3]])))
+  aux[[7]] <- aux[[7]] %>% filter((aux[[2]] != 00))
+  colnames(aux[[7]]) <- c("Intercepto","Inclinação","Distancia","pesoacum")
+  aux[[8]] <- filter(aux[[7]], pesoacum>0.5)[1,2]; aux[[9]] <- double(nrow(dados))
+  for(i in seq(1, nrow(dados))){aux[[9]][i] <- as.numeric(dados[i,][1] - aux[[8]] * dados[i,][2])}
+  aux[[10]] <- median(aux[[9]])
   out$salve <- cat("Universidade Federal de Minas Gerais \nRegressão não paramétrica: Rank-Regression\n\n")
-  out$original.x <- dados[,2]
-  out$original.y <- dados[,1]
-  out$fitted.values <- beta0 + beta1 * dados[,2]
-  out$residuals <- (beta0 + beta1 * dados[,2]) - dados[,1] 
-  out$modeloEscolhido <- cbind(beta0, beta1)
+  out$original.x <- dados[,2]; out$original.y <- dados[,1]
+  out$fitted.values <- aux[[10]] + aux[[8]] * dados[,2]
+  out$residuals <- (aux[[10]] + aux[[8]] * dados[,2]) - dados[,1] 
+  out$modeloEscolhido <- cbind(aux[[10]], aux[[8]])
   colnames(out$modeloEscolhido) <- c("Intercepto","Inclinação")
-  #_,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,__,.-'~'-.,_
   return(out)
 }
-
-btlad <- function(lad_inicial, repeticoes){
-  betas1 <- double(repeticoes)
-  y <- mean(lad_inicial$original.y)
-  for(i in seq(1, repeticoes)){
-    erros <- sample(lad_inicial$residuals, length(lad_inicial$residuals), replace = T)
-    novosy <- y + erros
-    cat("Calculando..", i,"/",repeticoes, "\n")
-    betas1[i] <- as.numeric(lad(data.frame(novosy, lad_inicial$original.x))$modeloEscolhido[2])
-  }
-  return(list('repeticoes' = repeticoes, 'qt' = c(quantile(betas1, .025), quantile(betas1, 0.975)), 'betas' = betas1))
-}
-
-btrreg <- function(rreg_inicial, repeticoes){
-  betas1 <- double(repeticoes)
-  y <- mean(rreg_inicial$original.y)
-  for(i in seq(1, repeticoes)){
-    erros <- sample(rreg_inicial$residuals, length(rreg_inicial$residuals), replace = T)
-    novosy <- y + erros
-    cat("Calculando..", i,"/",repeticoes, "\n")
-    betas1[i] <- as.numeric(rreg(data.frame(novosy, rreg_inicial$original.x))$modeloEscolhido[2])
-  }
-  return(list('Repeticoes' = repeticoes, 'qt' = c(quantile(betas1, .025), quantile(betas1, 0.975)), 'betas' = betas1))
-}
-
-
-btpd <- function(funcao){
-  priori <- runif(10000)
-  verossimilhança <- sapply(priori, funcao)  
-  pesos <- sapply(verossimilhança, function(x) x/sum(verossimilhança))
-  posteriori <- sample(priori, prob=pesos, replace = T)
-  return(list('qt' = c(quantile(posteriori, .025), quantile(posteriori, 0.975)), 'Posteriori' = posteriori))
-}
-
